@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>画像リサイズツール</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    label {
+      margin-right: 1rem;
+    }
+    #downloadLinks a {
+      display: block;
+      margin: 0.5rem 0;
+      color: blue;
+    }
+  </style>
+</head>
+<body>
+  <h1>画像リサイズツール</h1>
+
+  <input type="file" id="fileInput" accept="image/png, image/jpeg" /><br /><br />
+
+  <input type="text" id="prefixInput" placeholder="出力ファイルのprefix" /><br /><br />
+
+  <label><input type="checkbox" id="size192" checked /> 192x192</label>
+  <label><input type="checkbox" id="size512" /> 512x512</label><br /><br />
+
+  <button id="resizeBtn">画像変換</button><br /><br />
+
+  <div id="downloadLinks"></div>
+
+  <canvas id="canvas" style="display: none;"></canvas>
+
+  <script>
+    document.getElementById('resizeBtn').addEventListener('click', () => {
+      const file = document.getElementById('fileInput').files[0];
+      const prefix = document.getElementById('prefixInput').value.trim();
+      const sizes = [];
+
+      if (document.getElementById('size192').checked) sizes.push(192);
+      if (document.getElementById('size512').checked) sizes.push(512);
+
+      if (!file || !prefix || sizes.length === 0) {
+        alert("画像ファイル・prefix・サイズをすべて指定してください");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.getElementById('canvas');
+          const ctx = canvas.getContext('2d');
+          const container = document.getElementById('downloadLinks');
+          container.innerHTML = '';
+
+          sizes.forEach(size => {
+            canvas.width = size;
+            canvas.height = size;
+            ctx.clearRect(0, 0, size, size);
+            ctx.drawImage(img, 0, 0, size, size);
+
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = `${prefix}-${size}.png`;
+            link.textContent = `${size}x${size} をダウンロード`;
+            container.appendChild(link);
+          });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>
